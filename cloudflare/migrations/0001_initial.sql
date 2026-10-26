@@ -34,7 +34,9 @@ CREATE TABLE IF NOT EXISTS profile_state (
   user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   revision INTEGER NOT NULL DEFAULT 0,
   write_id TEXT,
-  document_json TEXT NOT NULL,
+  -- D1 limits one TEXT value/row to 2 MB. A real openGym state can be larger;
+  -- the immutable JSON body lives in R2 and this row is its atomic pointer.
+  object_key TEXT NOT NULL,
   updated_at INTEGER NOT NULL
 );
 

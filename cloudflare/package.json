@@ -5,7 +5,7 @@
   "scripts": {
     "build:web": "npm run build --prefix ../frontend && node ../scripts/catalogue/stage-media.mjs ../frontend/dist",
     "dev": "wrangler dev",
-    "test": "node test/index.test.js",
+    "test": "node test/index.test.js && node test/state-store.test.js",
     "types": "wrangler types",
     "check": "npm test && wrangler deploy --dry-run"
   },
