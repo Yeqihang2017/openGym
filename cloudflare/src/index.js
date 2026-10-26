@@ -1,9 +1,10 @@
 /* Cloudflare migration preview.
  *
- * Deliberately exposes no accounts, uploads, or state writes until auth, sync conflict
- * handling and media authorization are ported and tested. Unsupported API calls must
+ * Passkey registration is gated by a one-time deployment bootstrap code. Media,
+ * administration and Coach routes remain disabled. Unsupported API calls must
  * never fall through to the SPA's index.html and appear to have succeeded.
  */
+import { handleApi } from './api.js';
 
 const json = (status, body) => new Response(JSON.stringify(body), {
   status,
@@ -28,10 +29,13 @@ export default {
     }
 
     if (url.pathname === '/api/config' && request.method === 'GET') {
-      // The preview supports the upstream client's local-only guest mode. Its existing
-      // authenticated API must not be advertised until the complete port is ready.
-      return json(200, { invite_only: false, allow_guest: true });
+      // Invite-code UI is also the guarded first-owner bootstrap flow. The
+      // native paired-phone mode and other admin features remain unavailable.
+      return json(200, { invite_only: true, allow_guest: true });
     }
+
+    const api = await handleApi(request, env);
+    if (api) return api;
 
     if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
       return json(501, {

@@ -5,11 +5,14 @@
   "scripts": {
     "build:web": "npm run build --prefix ../frontend && node ../scripts/catalogue/stage-media.mjs ../frontend/dist",
     "dev": "wrangler dev",
-    "test": "node test/index.test.js && node test/state-store.test.js",
+    "test": "node --test test/*.test.js",
     "types": "wrangler types",
     "check": "npm test && wrangler deploy --dry-run"
   },
   "devDependencies": {
     "wrangler": "^4.45.0"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^13.3.3"
   }
 }

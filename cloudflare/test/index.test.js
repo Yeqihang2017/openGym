@@ -11,10 +11,10 @@ const env = {
   ASSETS: { fetch: async () => new Response('app shell', { status: 200 }) }
 };
 
-test('public config allows guest mode without advertising unavailable features', async () => {
+test('public config advertises guarded registration and guest mode', async () => {
   const response = await worker.fetch(request('/api/config'), env);
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { invite_only: false, allow_guest: true });
+  assert.deepEqual(await response.json(), { invite_only: true, allow_guest: true });
   assert.equal(response.headers.get('cache-control'), 'no-store');
 });
 
@@ -33,7 +33,7 @@ test('health returns 503 when D1 is unavailable', async () => {
 });
 
 test('unported API routes do not fall through to the web app', async () => {
-  for (const path of ['/api/me', '/api/data', '/api/media/0123']) {
+  for (const path of ['/api/media/0123', '/api/admin/coach']) {
     const response = await worker.fetch(request(path), env);
     assert.equal(response.status, 501);
     assert.equal((await response.json()).code, 'migration-incomplete');

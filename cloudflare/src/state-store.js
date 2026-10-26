@@ -32,6 +32,14 @@ async function readBlob(media, key) {
   return state;
 }
 
+// Server-side stamp bookkeeping is not part of the sync document the client
+// merges. Keep exactly the upstream Node API's public document shape.
+export function forClient(state) {
+  if (!state || typeof state !== 'object' || !('_unstamped' in state || '_prior' in state)) return state;
+  const { _unstamped, _prior, ...rest } = state;
+  return rest;
+}
+
 export async function readProfile(db, media, userId) {
   const row = await getRow(db, userId);
   return row ? { state: await readBlob(media, row.object_key), rev: row.revision, wid: row.write_id } : { state: null, rev: 0, wid: null };
@@ -61,7 +69,7 @@ export async function writeProfile(db, media, userId, body, now = Date.now()) {
   );
   if (conflict) {
     return { status: 409, body: { error: 'conflict', rev: curRev,
-      state: row ? await readBlob(media, row.object_key) : null } };
+      state: row ? forClient(await readBlob(media, row.object_key)) : null } };
   }
 
   let next;
@@ -122,7 +130,7 @@ export async function writeProfile(db, media, userId, body, now = Date.now()) {
     // Here the SQL statement definitely completed without changing a row.
     try { await media.delete(newKey); } catch { /* best-effort orphan cleanup */ }
     const latest = await readProfile(db, media, userId);
-    return { status: 409, body: { error: 'conflict', rev: latest.rev, state: latest.state } };
+    return { status: 409, body: { error: 'conflict', rev: latest.rev, state: forClient(latest.state) } };
   }
   return { status: 200, body: { ok: true, ts: next._ts || null, rev: curRev + 1, wid: next._wid } };
 }
